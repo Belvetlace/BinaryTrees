@@ -3,7 +3,8 @@ import java.util.*;
 
 
 //todo: Add a public/private pair, collectGarbage() (
-// the private method is the recursive counterpart of the public one, and takes/returns a root node).
+// the private method is the recursive counterpart of the public one,
+// and takes/returns a root node).
 // This allows the client to truly remove all deleted (stale) nodes.
 // Don't do this by creating a new tree and inserting data into it,
 // but by traversing the tree and doing a hard remove on each deleted node.
@@ -14,15 +15,16 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
    implements Cloneable
 {
    protected int mSize; //number of undeleted nodes
-   int mSizeHard; //number of both deleted and undeleted
+   protected int mSizeHard; //number of both deleted and undeleted
    protected FHlazySTNode<E> mRoot;
    
    public FHlazySearchTree() { clear(); }
    public boolean empty() { return (mSize == 0); }
    public int size() { return mSize; }
-   public void clear() { mSize = 0; mRoot = null; }
+   public void clear() { mSize = 0; mSizeHard = 0; mRoot = null; }
    public int showHeight() { return findHeight(mRoot, -1); }
-   
+
+   //todo: add check for deleted nodes
    public E findMin() 
    {
       if (mRoot == null)
@@ -36,7 +38,8 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
          throw new NoSuchElementException();
       return findMax(mRoot).data;
    }
-   
+
+   //todo: add check for deleted nodes
    public E find( E x )
    {
       FHlazySTNode<E> resultNode;
@@ -54,11 +57,10 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
       return (mSize != oldSize);
    }
    // todo: Revise to implement lazy deletion.
-   // The private version can now be void return type.
    public boolean remove( E x )
    {
       int oldSize = mSize;
-      mRoot = remove(mRoot, x);
+      remove(mRoot, x);
       return (mSize != oldSize);
    }
    
@@ -67,7 +69,8 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
    {
       traverse(func, mRoot);
    }
-   
+
+   //todo: add check for deleted nodes
    public Object clone() throws CloneNotSupportedException
    {
       FHlazySearchTree<E> newObject = (FHlazySearchTree<E>)super.clone();
@@ -110,6 +113,7 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
       if (root == null)
       {
          mSize++;
+         mSizeHard++;
          return new FHlazySTNode<E>(x, null, null);
       }
       
@@ -123,34 +127,66 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
    }
 
 // todo: Revise to implement lazy deletion.
-   protected FHlazySTNode<E> remove( FHlazySTNode<E> root, E x  )
+// The private version can now be void return type.
+   protected void remove( FHlazySTNode<E> root, E x  )
    {
       int compareResult;  // avoid multiple calls to compareTo()
      
       if (root == null)
-         return null;
+         return;
 
       compareResult = x.compareTo(root.data); 
       if ( compareResult < 0 )
-         root.lftChild = remove(root.lftChild, x);
+         remove(root.lftChild, x);
       else if ( compareResult > 0 )
-         root.rtChild = remove(root.rtChild, x);
+         remove(root.rtChild, x);
 
       // found the node
       else if (root.lftChild != null && root.rtChild != null)
       {
          root.data = findMin(root.rtChild).data;
-         root.rtChild = remove(root.rtChild, root.data);
+         remove(root.rtChild, root.data);
       }
       else
       {
          root =
             (root.lftChild != null)? root.lftChild : root.rtChild;
+         // mark node deleted
          mSize--;
+      }
+   }
+
+   protected FHlazySTNode<E> removeHard( FHlazySTNode<E> root, E x  )
+   {
+      int compareResult;  // avoid multiple calls to compareTo()
+
+      if (root == null)
+         return null;
+
+      compareResult = x.compareTo(root.data);
+      if (compareResult < 0)
+      {
+         root.lftChild = removeHard(root.lftChild, x);
+      } else if (compareResult > 0)
+      {
+         root.rtChild = removeHard(root.rtChild, x);
+      }
+         // found the node
+      else if (root.lftChild != null && root.rtChild != null)
+      {
+         root.data = findMin(root.rtChild).data;
+         root.rtChild = removeHard(root.rtChild, root.data);
+      }
+      else
+      {
+         root =
+                 (root.lftChild != null)? root.lftChild : root.rtChild;
+         mSizeHard--;
       }
       return root;
    }
-   
+
+
    protected <F extends Traverser<? super E>> 
    void traverse(F func, FHlazySTNode<E> treeNode)
    {
@@ -205,26 +241,46 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
       return (leftHeight > rightHeight)? leftHeight : rightHeight;
    }
 
-   public void collectGarbage()
+   public boolean collectGarbage()
    {
+      int oldSize = mSizeHard;
+      collectGarbage(mRoot);
+      return (oldSize != mSizeHard);
    }
 
+   protected void collectGarbage(FHlazySTNode<E> root)
+   {
+      // traverse the tree search for boolean deleted
+      // hard remove these nodes
+   }
 
    class FHlazySTNode<E extends Comparable< ? super E > >
    {
-      public FHlazySTNode<E> lftChild, rtChild;
+      FHlazySTNode<E> lftChild, rtChild;
       public E data;
       public FHlazySTNode<E> myRoot;  // needed to test for certain error
       boolean deleted;
 
 
-      public FHlazySTNode( E d, FHlazySTNode<E> lft, FHlazySTNode<E> rt )
+      FHlazySTNode(E d, FHlazySTNode<E> lft, FHlazySTNode<E> rt)
       {
          lftChild = lft; 
          rtChild = rt;
          data = d;
+         deleted = false;
       }
-      
+
+      public boolean isDeleted()
+      {
+         return deleted;
+      }
+
+      public boolean delete()
+      {
+         deleted = true;
+         return true;
+      }
+
       public FHlazySTNode()
       {
          this(null, null, null);
