@@ -15,7 +15,7 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
    public int showHeight() { return findHeight(mRoot, -1); }
 
    //todo: add check for deleted nodes
-   public E findMin() 
+   public E findMin()
    {
       if (mRoot == null)
          throw new NoSuchElementException();
@@ -84,18 +84,18 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
    // private helper methods ----------------------------------------
    protected FHlazySTNode<E> findMin( FHlazySTNode<E> root ) 
    {
-      if (root == null)
+      if (root == null || root.deleted)
          return null;
-      if (root.lftChild == null)
+      if (root.lftChild == null || root.lftChild.deleted)
          return root;
       return findMin(root.lftChild);
    }
    
    protected FHlazySTNode<E> findMax( FHlazySTNode<E> root ) 
    {
-      if (root == null)
+      if (root == null || root.deleted)
          return null;
-      if (root.rtChild == null)
+      if (root.rtChild == null || root.rtChild.deleted)
          return root;
       return findMax(root.rtChild);
    }
@@ -110,7 +110,12 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
          mSizeHard++;
          return new FHlazySTNode<E>(x, null, null);
       }
-      
+      /*if (root.deleted) // todo: what if root is soft deleted???
+      {
+          root.restore();
+          mSize++;
+          return root;
+      }*/
       compareResult = x.compareTo(root.data); 
       if ( compareResult < 0 )
          root.lftChild = insert(root.lftChild, x);
@@ -120,8 +125,7 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
       return root;
    }
 
-// todo: Revise to implement lazy deletion.
-// The private version can now be void return type.
+// done: Revise to implement lazy deletion.
    protected void remove( FHlazySTNode<E> root, E x  )
    {
       int compareResult;  // avoid multiple calls to compareTo()
@@ -131,22 +135,21 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
 
       compareResult = x.compareTo(root.data); 
       if ( compareResult < 0 )
-         remove(root.lftChild, x);
-      else if ( compareResult > 0 )
-         remove(root.rtChild, x);
-
-      // found the node
-      else if (root.lftChild != null && root.rtChild != null)
       {
-         root.data = findMin(root.rtChild).data;
-         remove(root.rtChild, root.data);
+          remove(root.lftChild, x);
       }
-      else
+      else if ( compareResult > 0 )
       {
-         root =
-            (root.lftChild != null)? root.lftChild : root.rtChild;
+          remove(root.rtChild, x);
+      }
+      else  // found the node
+      {
          // mark node deleted
-         mSize--;
+         if(!root.deleted)
+         {
+             root.delete();
+             mSize--;
+         }
       }
    }
 
@@ -173,8 +176,7 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
       }
       else
       {
-         root =
-                 (root.lftChild != null)? root.lftChild : root.rtChild;
+         root = (root.lftChild != null)? root.lftChild : root.rtChild;
          mSizeHard--;
       }
       return root;
@@ -192,7 +194,7 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
       traverse(func, treeNode.rtChild);
    }
 
-   //todo: add check for deleted nodes
+   //done: add check for deleted nodes
    protected FHlazySTNode<E> find( FHlazySTNode<E> root, E x )
    {
       int compareResult;  // avoid multiple calls to compareTo()
@@ -283,6 +285,12 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
          return true;
       }
 
+       public boolean restore()
+       {
+           deleted = false;
+           return true;
+       }
+
       public FHlazySTNode()
       {
          this(null, null, null);
@@ -291,6 +299,7 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
       // function stubs -- for use only with AVL Trees when we extend
       public int getHeight() { return 0; }
       boolean setHeight(int height) { return true; }
+
    }
 
 }
