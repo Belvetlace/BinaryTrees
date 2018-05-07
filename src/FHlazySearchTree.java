@@ -1,16 +1,6 @@
 import cs_1c.*;
 import java.util.*;
 
-
-//todo: Add a public/private pair, collectGarbage() (
-// the private method is the recursive counterpart of the public one,
-// and takes/returns a root node).
-// This allows the client to truly remove all deleted (stale) nodes.
-// Don't do this by creating a new tree and inserting data into it,
-// but by traversing the tree and doing a hard remove on each deleted node.
-// This will require that you have a private removeHard() utility
-// that works very much like our old remove() method.
-
 public class FHlazySearchTree<E extends Comparable< ? super E > >
    implements Cloneable
 {
@@ -48,7 +38,11 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
          throw new NoSuchElementException();
       return resultNode.data;
    }
-   public boolean contains(E x)  { return find(mRoot, x) != null; }
+
+   public boolean contains(E x)
+   {
+      return find(mRoot, x) != null;
+   }
    
    public boolean insert( E x )
    {
@@ -197,12 +191,13 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
       func.visit(treeNode.data);
       traverse(func, treeNode.rtChild);
    }
-   
+
+   //todo: add check for deleted nodes
    protected FHlazySTNode<E> find( FHlazySTNode<E> root, E x )
    {
       int compareResult;  // avoid multiple calls to compareTo()
 
-      if (root == null)
+      if (root == null || root.deleted) //
          return null;
 
       compareResult = x.compareTo(root.data); 
@@ -217,7 +212,7 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
    {
       FHlazySTNode<E> newNode;
 
-      if (root == null)
+      if (root == null || root.deleted)
          return null;
 
       // does not set myRoot which must be done by caller
@@ -248,10 +243,17 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
       return (oldSize != mSizeHard);
    }
 
-   protected void collectGarbage(FHlazySTNode<E> root)
+//todo: Add a public/private pair, collectGarbage() (
+// the private method is the recursive counterpart of the public one,
+// and takes/returns a root node).
+// This allows the client to truly remove all deleted (stale) nodes.
+// Don't do this by creating a new tree and inserting data into it,
+// but by traversing the tree and doing a hard remove on each deleted node.
+   protected FHlazySTNode<E> collectGarbage(FHlazySTNode<E> root)
    {
-      // traverse the tree search for boolean deleted
-      // hard remove these nodes
+      // todo: traverse the tree search for boolean deleted
+      // use removeHard() to remove these nodes
+      return null;
    }
 
    class FHlazySTNode<E extends Comparable< ? super E > >
@@ -259,7 +261,7 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
       FHlazySTNode<E> lftChild, rtChild;
       public E data;
       public FHlazySTNode<E> myRoot;  // needed to test for certain error
-      boolean deleted;
+      public boolean deleted;
 
 
       FHlazySTNode(E d, FHlazySTNode<E> lft, FHlazySTNode<E> rt)
