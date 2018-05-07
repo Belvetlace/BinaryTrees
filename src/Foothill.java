@@ -45,6 +45,11 @@ public class Foothill
         // test assignment operator
         FHlazySearchTree<Integer> searchTree2
                 = (FHlazySearchTree<Integer>)searchTree.clone();
+        System.out.println( "\nCloning tree: ");
+        System.out.println( "tree 2 size: " + searchTree2.size()
+                + "  Hard size: " + searchTree2.sizeHard() );
+        searchTree2.traverse(intPrinter);
+
 
         System.out.println( "\n\nAttempting 1 removal: ");
         if (searchTree.remove(20))

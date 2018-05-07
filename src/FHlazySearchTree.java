@@ -72,7 +72,8 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
 
       newObject.mRoot = cloneSubtree(mRoot);
       newObject.mSize = mSize;
-      
+      newObject.mSizeHard = mSize;
+
       return newObject;
    }
 
@@ -141,14 +142,11 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
       {
           remove(root.rtChild, x);
       }
-      else  // found the node
+      else if(!root.deleted) // found the node
       {
          // mark node deleted
-         if(!root.deleted)
-         {
-             root.delete();
-             mSize--;
-         }
+          root.delete();
+          mSize--;
       }
    }
 
