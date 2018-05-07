@@ -110,17 +110,16 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
          mSizeHard++;
          return new FHlazySTNode<E>(x, null, null);
       }
-      /*if (root.deleted) // todo: what if root is soft deleted???
-      {
-          root.restore();
-          mSize++;
-          return root;
-      }*/
       compareResult = x.compareTo(root.data); 
       if ( compareResult < 0 )
          root.lftChild = insert(root.lftChild, x);
       else if ( compareResult > 0 )
          root.rtChild = insert(root.rtChild, x);
+      else // root is soft deleted
+      {
+          root.restore();
+          mSize++;
+      }
 
       return root;
    }
