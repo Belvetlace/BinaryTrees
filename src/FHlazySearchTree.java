@@ -1,18 +1,40 @@
 import cs_1c.*;
+
 import java.util.*;
 
-public class FHlazySearchTree<E extends Comparable< ? super E > >
-   implements Cloneable
+public class FHlazySearchTree<E extends Comparable<? super E>>
+        implements Cloneable
 {
    protected int mSize; //number of undeleted nodes
    protected int mSizeHard; //number of both deleted and undeleted
    protected FHlazySTNode<E> mRoot;
 
-   public FHlazySearchTree() { clear(); }
-   public boolean empty() { return (mSize == 0); }
-   public int size() { return mSize; }
-   public void clear() { mSize = 0; mSizeHard = 0; mRoot = null; }
-   public int showHeight() { return findHeight(mRoot, -1); }
+   public FHlazySearchTree()
+   {
+      clear();
+   }
+
+   public boolean empty()
+   {
+      return (mSize == 0);
+   }
+
+   public int size()
+   {
+      return mSize;
+   }
+
+   public void clear()
+   {
+      mSize = 0;
+      mSizeHard = 0;
+      mRoot = null;
+   }
+
+   public int showHeight()
+   {
+      return findHeight(mRoot, -1);
+   }
 
    public E findMin()
    {
@@ -28,7 +50,7 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
       return findMax(mRoot).data;
    }
 
-   public E find( E x )
+   public E find(E x)
    {
       FHlazySTNode<E> resultNode;
       resultNode = find(mRoot, x);
@@ -42,21 +64,21 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
       return find(mRoot, x) != null;
    }
 
-   public boolean insert( E x )
+   public boolean insert(E x)
    {
       int oldSize = mSize;
       mRoot = insert(mRoot, x);
       return (mSize != oldSize);
    }
 
-   public boolean remove( E x )
+   public boolean remove(E x)
    {
       int oldSize = mSize;
       remove(mRoot, x);
       return (mSize != oldSize);
    }
 
-   public < F extends Traverser<? super E > >
+   public <F extends Traverser<? super E>>
    void traverse(F func)
    {
       traverse(func, mRoot);
@@ -65,7 +87,7 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
    //todo: add check for deleted nodes
    public Object clone() throws CloneNotSupportedException
    {
-      FHlazySearchTree<E> newObject = (FHlazySearchTree<E>)super.clone();
+      FHlazySearchTree<E> newObject = (FHlazySearchTree<E>) super.clone();
       newObject.clear();  // can't point to other's data
 
       newObject.mRoot = cloneSubtree(mRoot);
@@ -80,17 +102,21 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
    {
       return mSizeHard;
    }
+
    // private helper methods ----------------------------------------
-   protected FHlazySTNode<E> findMin( FHlazySTNode<E> root )
+   protected FHlazySTNode<E> findMin(FHlazySTNode<E> root)
    {
-      if (root == null || root.deleted)
+      if (root == null)
          return null;
-      if (root.lftChild == null || root.lftChild.deleted)
+      if (root.lftChild == null) // && !root.deleted
          return root;
+      //if (root.lftChild == null) //root is deleted
+         //return root; //null
+      // child not null: deleted or not
       return findMin(root.lftChild);
    }
 
-   protected FHlazySTNode<E> findMax( FHlazySTNode<E> root )
+   protected FHlazySTNode<E> findMax(FHlazySTNode<E> root)
    {
       if (root == null || root.deleted)
          return null;
@@ -99,7 +125,7 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
       return findMax(root.rtChild);
    }
 
-   protected FHlazySTNode<E> insert( FHlazySTNode<E> root, E x )
+   protected FHlazySTNode<E> insert(FHlazySTNode<E> root, E x)
    {
       int compareResult;  // avoid multiple calls to compareTo()
 
@@ -110,21 +136,21 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
          return new FHlazySTNode<E>(x, null, null);
       }
       compareResult = x.compareTo(root.data);
-      if ( compareResult < 0 )
+      if (compareResult < 0)
          root.lftChild = insert(root.lftChild, x);
-      else if ( compareResult > 0 )
+      else if (compareResult > 0)
          root.rtChild = insert(root.rtChild, x);
       else // root is soft deleted
       {
-          root.restore();
-          mSize++;
+         root.restore();
+         mSize++;
       }
 
       return root;
    }
 
-// done: Revise to implement lazy deletion.
-   protected void remove( FHlazySTNode<E> root, E x  )
+   // done: Revise to implement lazy deletion.
+   protected void remove(FHlazySTNode<E> root, E x)
    {
       int compareResult;  // avoid multiple calls to compareTo()
 
@@ -132,53 +158,40 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
          return;
 
       compareResult = x.compareTo(root.data);
-      if ( compareResult < 0 )
+      if (compareResult < 0)
       {
-          remove(root.lftChild, x);
-      }
-      else if ( compareResult > 0 )
+         remove(root.lftChild, x);
+      } else if (compareResult > 0)
       {
-          remove(root.rtChild, x);
-      }
-      else if(!root.deleted) // found the node
+         remove(root.rtChild, x);
+      } else if (!root.deleted) // found the node
       {
          // mark node deleted
-          root.delete();
-          mSize--;
+         root.delete();
+         mSize--;
       }
    }
 
-   protected FHlazySTNode<E> removeHard( FHlazySTNode<E> root) //, E x
+   protected FHlazySTNode<E> removeHard(FHlazySTNode<E> root, E x)
    {
       if (root == null)
          return null;
-      /*
-      int compareResult;  // avoid multiple calls to compareTo()
-      compareResult = x.compareTo(root.data);
-      if (compareResult < 0)
-      {
-         root.lftChild = removeHard(root.lftChild, x);
-      } else if (compareResult > 0)
-      {
-         root.rtChild = removeHard(root.rtChild, x);
-      }
-         // found the node
 
-      else */
       if (root.lftChild == null && root.rtChild == null)
       {
          root = null;
          mSizeHard--;
       }
-      else if(root.lftChild != null && root.rtChild != null)
-      {
-         root.data = findMin(root.rtChild).data;
-         root.deleted = false;
-         root.rtChild = removeHard(root.rtChild); //, root.data
-      }
       else
+      if (root.lftChild != null && root.rtChild != null)
       {
-         root = (root.lftChild != null)? root.lftChild : root.rtChild;
+         System.out.println( "left=" + root.lftChild.data +  " right=" +root.rtChild.data);
+         root.data = findMin(root.rtChild).data; //getting null here
+         root.deleted = false;
+         root.rtChild = removeHard(root.rtChild, root.data); //, root.data
+      } else
+      {
+         root = (root.lftChild != null) ? root.lftChild : root.rtChild;
          mSizeHard--;
       }
       return root;
@@ -200,7 +213,7 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
    }
 
    //done: add check for deleted nodes
-   protected FHlazySTNode<E> find( FHlazySTNode<E> root, E x )
+   protected FHlazySTNode<E> find(FHlazySTNode<E> root, E x)
    {
       int compareResult;  // avoid multiple calls to compareTo()
 
@@ -215,25 +228,28 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
       return root;   // found
    }
 
-   //todo: test for lasy deletion
+   //todo: test for lasy deletion are we copying deleted nodes???
    protected FHlazySTNode<E> cloneSubtree(FHlazySTNode<E> root)
    {
       FHlazySTNode<E> newNode;
 
-      if (root == null || root.deleted)
+      if (root == null)
          return null;
 
       // does not set myRoot which must be done by caller
       newNode = new FHlazySTNode<E>
-      (
-         root.data,
-         cloneSubtree(root.lftChild),
-         cloneSubtree(root.rtChild)
-      );
+              (
+                      root.data,
+                      cloneSubtree(root.lftChild),
+                      cloneSubtree(root.rtChild)
+              );
+      if (root.deleted)
+         newNode.delete();
+
       return newNode;
    }
 
-   protected int findHeight( FHlazySTNode<E> treeNode, int height )
+   protected int findHeight(FHlazySTNode<E> treeNode, int height)
    {
       int leftHeight, rightHeight;
       if (treeNode == null)
@@ -241,13 +257,13 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
       height++;
       leftHeight = findHeight(treeNode.lftChild, height);
       rightHeight = findHeight(treeNode.rtChild, height);
-      return (leftHeight > rightHeight)? leftHeight : rightHeight;
+      return (leftHeight > rightHeight) ? leftHeight : rightHeight;
    }
 
    public boolean collectGarbage()
    {
       int oldSize = mSizeHard;
-      collectGarbage(mRoot);
+      mRoot = collectGarbage(mRoot);
       return (oldSize != mSizeHard);
    }
 
@@ -260,31 +276,26 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
 
    protected FHlazySTNode<E> collectGarbage(FHlazySTNode<E> root)
    {
-      // todo: traverse the tree search for boolean deleted
-      // best to do in post order!!!
-      // use removeHard() to remove these nodes
-        if (root == null)
-           return null;
 
-       if (root.lftChild != null)
-       {
-           collectGarbage(root.lftChild);
-       }
-       if (root.rtChild != null)
-       {
-           collectGarbage(root.rtChild);
-       }
-        //deal with the node
-        if (root.deleted)
-        {
-            System.out.print(root.data + " ");
-            removeHard(root);
-        }
+      if (root == null)
+         return null;
+      System.out.println("\n"+root.data + " is current root;");
+      root.lftChild = collectGarbage(root.lftChild);
+      root.rtChild = collectGarbage(root.rtChild);
+
+      //deal with the node
+      if (root.deleted)
+      {
+         System.out.print(root.data + "del ");
+         root = removeHard(root, root.data);
+         if (root != null)
+            System.out.println(root.data + "root data");
+      }
 
       return root;
    }
 
-   class FHlazySTNode<E extends Comparable< ? super E > >
+   class FHlazySTNode<E extends Comparable<? super E>>
    {
       FHlazySTNode<E> lftChild, rtChild;
       public E data;
@@ -311,11 +322,11 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
          return true;
       }
 
-       public boolean restore()
-       {
-           deleted = false;
-           return true;
-       }
+      public boolean restore()
+      {
+         deleted = false;
+         return true;
+      }
 
       public FHlazySTNode()
       {
@@ -323,8 +334,15 @@ public class FHlazySearchTree<E extends Comparable< ? super E > >
       }
 
       // function stubs -- for use only with AVL Trees when we extend
-      public int getHeight() { return 0; }
-      boolean setHeight(int height) { return true; }
+      public int getHeight()
+      {
+         return 0;
+      }
+
+      boolean setHeight(int height)
+      {
+         return true;
+      }
 
    }
 

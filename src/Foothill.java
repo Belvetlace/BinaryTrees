@@ -101,10 +101,12 @@ public class Foothill
          if (searchTree.remove(k))
             System.out.println("removed " + k);
       }
+
       System.out.println("\nsearch_tree now:");
       searchTree.traverse(intPrinter);
       System.out.println("\ntree 1 size: " + searchTree.size()
               + "  Hard size: " + searchTree.sizeHard());
+
       searchTree.collectGarbage();
 
       System.out.println("\nsearch_tree now:");
@@ -118,10 +120,14 @@ public class Foothill
       searchTree2.insert(700);
       searchTree2.insert(100);
       searchTree2.insert(600);
-      System.out.println("\nsearchTree2:\n");
+      System.out.println("\nsearchTree2:");
       searchTree2.traverse(intPrinter);
       System.out.println("\ntree 2 size: " + searchTree2.size()
               + "  Hard size: " + searchTree2.sizeHard());
+
+      //System.out.println("\nsearch_tree removing last node:");
+      //searchTree.remove(70);
+      //searchTree.collectGarbage();
    }
 }
 
