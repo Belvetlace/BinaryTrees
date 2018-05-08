@@ -185,7 +185,7 @@ public class FHlazySearchTree<E extends Comparable<? super E>>
       else
       if (root.lftChild != null && root.rtChild != null)
       {
-         System.out.println( "left=" + root.lftChild.data +  " right=" +root.rtChild.data);
+         //System.out.println( "left=" + root.lftChild.data +  " right=" +root.rtChild.data);
          root.data = findMin(root.rtChild).data; //getting null here
          root.deleted = false;
          root.rtChild = removeHard(root.rtChild, root.data); //, root.data
@@ -279,17 +279,17 @@ public class FHlazySearchTree<E extends Comparable<? super E>>
 
       if (root == null)
          return null;
-      System.out.println("\n"+root.data + " is current root;");
+      //System.out.println("\n"+root.data + " is current root;");
       root.lftChild = collectGarbage(root.lftChild);
       root.rtChild = collectGarbage(root.rtChild);
 
       //deal with the node
       if (root.deleted)
       {
-         System.out.print(root.data + "del ");
+         //System.out.print(root.data + "del ");
          root = removeHard(root, root.data);
-         if (root != null)
-            System.out.println(root.data + "root data");
+         //if (root != null)
+            //System.out.println(root.data + "root data");
       }
 
       return root;
