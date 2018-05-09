@@ -21,7 +21,6 @@ public class Foothill
    {
       int k;
       FHlazySearchTree<Integer> searchTree = new FHlazySearchTree<Integer>();
-      PrintObject<Integer> intPrinter = new PrintObject<Integer>();
 
       System.out.println("\nInitial size: " );
       printTreeSizes(searchTree);
@@ -103,7 +102,8 @@ public class Foothill
 
       System.out.println("\nInserting extra 100 nodes " +
               "and attempting 100 removals: ");
-      insertExtraHundredNodes(searchTree);
+      insertExtraTenNodes(searchTree);
+      printTreeSizes(searchTree);
       System.out.print("removed:");
       for (k = 170; k > 0; k--)
       {
@@ -142,12 +142,12 @@ public class Foothill
       testFindMin(searchTree2);
       System.out.println("\n----------------------");
 
-      System.out.println("\n----------------------");
-      System.out.println("\n----------------------");
+
+      System.out.println("\n###############################");
       System.out.println("\nTest with Book Entries");
       FHlazySearchTree<EBookEntry> searchTreeBooks =
-              new FHlazySearchTree<EBookEntry>();
-      PrintObject<String> printBooks = new PrintObject<String>();
+              new FHlazySearchTree<>();
+
       // how we read the data from files
       EBookEntryReader bookInput =
               new EBookEntryReader("catalog-short4.txt");
@@ -170,21 +170,89 @@ public class Foothill
       for (int b = 0; b < arraySize; b++)
          bookArray[b] = bookInput.getBook(b);
 
-      for (int e = 0; e < arraySize; e++)
-         searchTreeBooks.insert(bookArray[e]);
+      EBookEntry.setSortType(EBookEntry.SORT_BY_ID);
+      System.out.println( "Sorting ..." );
+      FoothillSort.arraySort(bookArray);
 
+      System.out.println( "\nAdding 10 books" );
+      for (int e = 0; e < arraySize-4853; e++)
+         searchTreeBooks.insert(bookArray[e]);
+      //System.out.println("array length " + bookArray.length);
+      printTreeBookSizes(searchTreeBooks);
+
+      System.out.println("\n###############################");
+      System.out.println( "\nCloned book:" );
+      FHlazySearchTree<EBookEntry> searchTreeBooks2 =
+              (FHlazySearchTree<EBookEntry>)searchTreeBooks.clone();
+      printTreeBookSizes(searchTreeBooks2);
+      System.out.println("\n###############################");
+
+      System.out.println( "\nRemoving 3 books" );
+      searchTreeBooks.remove(bookArray[1]);
+      searchTreeBooks.remove(bookArray[2]);
+      searchTreeBooks.remove(bookArray[3]);
+
+      printTreeBookSizes(searchTreeBooks);
+
+      System.out.println( "\nCollecting garbage" );
+
+      searchTreeBooks.collectGarbage();
+
+      printTreeBookSizes(searchTreeBooks);
+
+      System.out.println("\n###############################");
+      System.out.println( "\nRemoving last book. Testing find" );
+      searchTreeBooks.remove(bookArray[9]);
+      testFindBook(searchTreeBooks, bookArray);
+
+      System.out.println("\nTesting findMax\n" + searchTreeBooks.findMax());
+      System.out.println("\nTesting findMin\n" + searchTreeBooks.findMin());
+
+      System.out.println("\n###############################");
+      System.out.println( "\nCloned book unchanged:" );
+      printTreeBookSizes(searchTreeBooks2);
 
    }
 
-   public static void printTreeBookSizes(FHlazySearchTree<Integer> searchTree)
+   public static void printTreeBookSizes(FHlazySearchTree<EBookEntry> bookTree)
    {
       PrintObject<EBookEntry> printBooks = new PrintObject<>();
       System.out.print("EBookEntry: ");
-      //searchTree.traverse(printBooks);
+      bookTree.traverse(printBooks);
       System.out.print("\nSoft deleted EBookEntry: ");
-      //searchTree.traverseSoftDeleted(printBooks);
-      System.out.println("\nTree size: " + searchTree.size()
-              + "  Hard size: " + searchTree.sizeHard());
+      bookTree.traverseSoftDeleted(printBooks);
+      System.out.println("\nTree size: " + bookTree.size()
+              + "  Hard size: " + bookTree.sizeHard());
+   }
+
+   public static void
+   testFindBook(FHlazySearchTree<EBookEntry> searchTree, EBookEntry[] bookArray)
+   {
+      System.out.println("\nSearch for existed book");
+      try
+      {
+         System.out.println("found: " + searchTree.find(bookArray[4]));
+      } catch (NoSuchElementException e)
+      {
+         System.out.println("book not found");
+      }
+
+      System.out.println("Search for soft deleted last book");
+      try
+      {
+         System.out.println("found: " + searchTree.find(bookArray[9]));
+      } catch (NoSuchElementException e)
+      {
+         System.out.println("book not found");
+      }
+      System.out.println("\nSearch for deleted first book");
+      try
+      {
+         System.out.println("found: " + searchTree.find(bookArray[1]));
+      } catch (NoSuchElementException e)
+      {
+         System.out.println("book not found");
+      }
    }
 
    private static void testFindMin(FHlazySearchTree<Integer> searchTree)
@@ -248,11 +316,12 @@ public class Foothill
    }
 
    public static void
-   insertExtraHundredNodes(FHlazySearchTree<Integer> searchTree)
+   insertExtraTenNodes(FHlazySearchTree<Integer> searchTree)
    {
-      for(int i = 71 ; i < 171; i++)
+      for(int i = 0 ; i < 10; i++)
       searchTree.insert(i);
    }
+
    public static void testFind(FHlazySearchTree<Integer> searchTree)
    {
       System.out.println("\nSearch for existed node 30");
