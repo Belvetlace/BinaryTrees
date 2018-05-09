@@ -123,11 +123,15 @@ public class FHlazySearchTree<E extends Comparable<? super E>>
 
    protected FHlazySTNode<E> findMax(FHlazySTNode<E> root)
    {
-      if (root == null || root.deleted) //
+      if (root == null ) // || root.deleted
          return null;
-      if (root.rtChild == null || root.rtChild.deleted)
+
+      FHlazySTNode<E> current = findMax(root.rtChild);
+      if (current != null)
+         return current;
+      if (!root.deleted )
          return root;
-      return findMax(root.rtChild);
+      return findMax(root.lftChild);
    }
 
    protected FHlazySTNode<E> insert(FHlazySTNode<E> root, E x)
