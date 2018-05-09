@@ -84,6 +84,12 @@ public class FHlazySearchTree<E extends Comparable<? super E>>
       traverse(func, mRoot);
    }
 
+   public <F extends Traverser<? super E>>
+   void traverseSoftDeleted(F func)
+   {
+      traverseSoftDeleted(func, mRoot);
+   }
+
    //todo: add check for deleted nodes
    public Object clone() throws CloneNotSupportedException
    {
@@ -118,7 +124,7 @@ public class FHlazySearchTree<E extends Comparable<? super E>>
 
    protected FHlazySTNode<E> findMax(FHlazySTNode<E> root)
    {
-      if (root == null || root.deleted)
+      if (root == null ) //|| root.deleted
          return null;
       if (root.rtChild == null || root.rtChild.deleted)
          return root;
@@ -210,6 +216,20 @@ public class FHlazySearchTree<E extends Comparable<? super E>>
          func.visit(treeNode.data);
       }
       traverse(func, treeNode.rtChild);
+   }
+
+   protected <F extends Traverser<? super E>>
+   void traverseSoftDeleted(F func, FHlazySTNode<E> treeNode)
+   {
+      if (treeNode == null)
+         return;
+
+      traverseSoftDeleted(func, treeNode.lftChild);
+      if (treeNode.deleted)
+      {
+         func.visit(treeNode.data);
+      }
+      traverseSoftDeleted(func, treeNode.rtChild);
    }
 
    //done: add check for deleted nodes

@@ -150,7 +150,10 @@ public class Foothill
    public static void printTreeSizes(FHlazySearchTree<Integer> searchTree)
    {
       PrintObject<Integer> intPrinter = new PrintObject<Integer>();
+      System.out.print("Nodes: ");
       searchTree.traverse(intPrinter);
+      System.out.print("\nSoft deleted nodes: ");
+      searchTree.traverseSoftDeleted(intPrinter);
       System.out.println("\nTree size: " + searchTree.size()
               + "  Hard size: " + searchTree.sizeHard());
    }
