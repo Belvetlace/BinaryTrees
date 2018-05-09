@@ -9,7 +9,7 @@ class PrintObject<E> implements Traverser<E>
 {
    public void visit(E x)
    {
-      System.out.print( x + " ");
+      System.out.print( x.toString() + " ");
    }
 };
 
@@ -142,6 +142,49 @@ public class Foothill
       testFindMin(searchTree2);
       System.out.println("\n----------------------");
 
+      System.out.println("\n----------------------");
+      System.out.println("\n----------------------");
+      System.out.println("\nTest with Book Entries");
+      FHlazySearchTree<EBookEntry> searchTreeBooks =
+              new FHlazySearchTree<EBookEntry>();
+      PrintObject<String> printBooks = new PrintObject<String>();
+      // how we read the data from files
+      EBookEntryReader bookInput =
+              new EBookEntryReader("catalog-short4.txt");
+      int arraySize;
+
+      // how we test the success of the read:
+      if (bookInput.readError())
+      {
+         System.out.println("couldn't open " + bookInput.getFileName()
+                 + " for input.");
+         return;
+      }
+
+      System.out.println(bookInput.getFileName());
+      System.out.println(bookInput.getNumBooks());
+
+      // create an array of objects for our own use:
+      arraySize = bookInput.getNumBooks();
+      EBookEntry[] bookArray = new EBookEntry[arraySize];
+      for (int b = 0; b < arraySize; b++)
+         bookArray[b] = bookInput.getBook(b);
+
+      for (int e = 0; e < arraySize; e++)
+         searchTreeBooks.insert(bookArray[e]);
+
+
+   }
+
+   public static void printTreeBookSizes(FHlazySearchTree<Integer> searchTree)
+   {
+      PrintObject<EBookEntry> printBooks = new PrintObject<>();
+      System.out.print("EBookEntry: ");
+      //searchTree.traverse(printBooks);
+      System.out.print("\nSoft deleted EBookEntry: ");
+      //searchTree.traverseSoftDeleted(printBooks);
+      System.out.println("\nTree size: " + searchTree.size()
+              + "  Hard size: " + searchTree.sizeHard());
    }
 
    private static void testFindMin(FHlazySearchTree<Integer> searchTree)
