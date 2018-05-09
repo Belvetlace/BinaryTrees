@@ -113,12 +113,13 @@ public class FHlazySearchTree<E extends Comparable<? super E>>
    {
       if (root == null)
          return null;
-      if (root.lftChild == null) // && !root.deleted
+
+      FHlazySTNode<E> current_root = findMin(root.lftChild);
+      if (current_root != null)
+         return current_root;
+      if (!root.deleted )
          return root;
-      //if (root.lftChild == null) //root is deleted
-         //return root; //null
-      // child not null: deleted or not
-      return findMin(root.lftChild);
+      return findMin(root.rtChild);
    }
 
    protected FHlazySTNode<E> findMax(FHlazySTNode<E> root)
@@ -126,9 +127,9 @@ public class FHlazySearchTree<E extends Comparable<? super E>>
       if (root == null ) // || root.deleted
          return null;
 
-      FHlazySTNode<E> current = findMax(root.rtChild);
-      if (current != null)
-         return current;
+      FHlazySTNode<E> current_root = findMax(root.rtChild);
+      if (current_root != null)
+         return current_root;
       if (!root.deleted )
          return root;
       return findMax(root.lftChild);
@@ -181,6 +182,16 @@ public class FHlazySearchTree<E extends Comparable<? super E>>
       }
    }
 
+   protected FHlazySTNode<E> findMinCollGarbage(FHlazySTNode<E> root)
+   {
+      if (root == null)
+         return null;
+      if (root.lftChild == null)
+         return root;
+
+      return findMinCollGarbage(root.lftChild);
+   }
+
    protected FHlazySTNode<E> removeHard(FHlazySTNode<E> root)
    {
       if (root == null)
@@ -194,7 +205,7 @@ public class FHlazySearchTree<E extends Comparable<? super E>>
       else
       if (root.lftChild != null && root.rtChild != null)
       {
-         root.data = findMin(root.rtChild).data;
+         root.data = findMinCollGarbage(root.rtChild).data;
          root.deleted = false;
          root.rtChild = removeHard(root.rtChild);
       } else

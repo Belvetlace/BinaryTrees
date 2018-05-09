@@ -87,6 +87,14 @@ public class Foothill
       testFindMax(searchTree);
       System.out.println("\n----------------------");
 
+      System.out.println("\nTest findMin() on filled tree");
+      testFindMin(searchTree);
+      System.out.println("\nSoft delete 10");
+      searchTree.remove(10);
+      testFindMin(searchTree);
+      System.out.println("\n----------------------");
+
+
       System.out.println("\nInserting extra 100 nodes " +
               "and attempting 100 removals: ");
       insertExtraHundredNodes(searchTree);
@@ -114,11 +122,33 @@ public class Foothill
       testFindMax(searchTree);
       System.out.println("\n----------------------");
 
+      System.out.println("\nTest findMin() on empty tree");
+      testFindMin(searchTree);
+      System.out.println("\n----------------------");
+
       insertExtraNodes(searchTree2);
 
       System.out.println("\nsearchTree2:");
       printTreeSizes(searchTree2);
 
+      System.out.println("\n----------------------");
+      System.out.println("\nTest findMin() on filled tree2");
+      testFindMin(searchTree2);
+      System.out.println("\n----------------------");
+
+   }
+
+   private static void testFindMin(FHlazySearchTree<Integer> searchTree)
+   {
+      printTreeSizes(searchTree);
+      try
+      {
+         System.out.println("search tree for min: found "
+                 + searchTree.findMin());
+      } catch (NoSuchElementException e)
+      {
+         System.out.println("min not found");
+      }
    }
 
    private static void testFindMax(FHlazySearchTree<Integer> searchTree)
