@@ -46,7 +46,13 @@ public class Foothill
          System.out.println("removed " + 20);
       printTreeSizes(searchTree);
 
-      System.out.println("Collecting Garbage - should clean 1 item. ");
+      FHlazySearchTree<Integer> searchTree3
+              = (FHlazySearchTree<Integer>) searchTree.clone();
+      System.out.println("\nCloning tree with soft-deleted node: tree 3:");
+      printTreeSizes(searchTree3);
+
+      System.out.println("\nCollecting Garbage on 1st tree:" +
+              " - should clean 1 item. ");
       searchTree.collectGarbage();
       printTreeSizes(searchTree);
 
