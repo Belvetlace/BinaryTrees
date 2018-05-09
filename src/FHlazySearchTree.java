@@ -90,7 +90,6 @@ public class FHlazySearchTree<E extends Comparable<? super E>>
       traverseSoftDeleted(func, mRoot);
    }
 
-   //todo: add check for deleted nodes
    public Object clone() throws CloneNotSupportedException
    {
       FHlazySearchTree<E> newObject = (FHlazySearchTree<E>) super.clone();
@@ -124,7 +123,7 @@ public class FHlazySearchTree<E extends Comparable<? super E>>
 
    protected FHlazySTNode<E> findMax(FHlazySTNode<E> root)
    {
-      if (root == null ) //|| root.deleted
+      if (root == null || root.deleted) //
          return null;
       if (root.rtChild == null || root.rtChild.deleted)
          return root;
@@ -178,7 +177,7 @@ public class FHlazySearchTree<E extends Comparable<? super E>>
       }
    }
 
-   protected FHlazySTNode<E> removeHard(FHlazySTNode<E> root, E x)
+   protected FHlazySTNode<E> removeHard(FHlazySTNode<E> root)
    {
       if (root == null)
          return null;
@@ -191,10 +190,9 @@ public class FHlazySearchTree<E extends Comparable<? super E>>
       else
       if (root.lftChild != null && root.rtChild != null)
       {
-         //System.out.println( "left=" + root.lftChild.data +  " right=" +root.rtChild.data);
-         root.data = findMin(root.rtChild).data; //getting null here
+         root.data = findMin(root.rtChild).data;
          root.deleted = false;
-         root.rtChild = removeHard(root.rtChild, root.data); //, root.data
+         root.rtChild = removeHard(root.rtChild);
       } else
       {
          root = (root.lftChild != null) ? root.lftChild : root.rtChild;
@@ -248,7 +246,7 @@ public class FHlazySearchTree<E extends Comparable<? super E>>
       return root;   // found
    }
 
-   //todo: test for lasy deletion are we copying deleted nodes???
+   //todo: are we copying deleted nodes???
    protected FHlazySTNode<E> cloneSubtree(FHlazySTNode<E> root)
    {
       FHlazySTNode<E> newNode;
@@ -288,28 +286,19 @@ public class FHlazySearchTree<E extends Comparable<? super E>>
    }
 
 
-// the private method is the recursive counterpart of the public one,
-// and takes/returns a root node).
-// This allows the client to truly remove all deleted (stale) nodes.
-// Don't do this by creating a new tree and inserting data into it,
-// but by traversing the tree and doing a hard remove on each deleted node.
-
    protected FHlazySTNode<E> collectGarbage(FHlazySTNode<E> root)
    {
 
       if (root == null)
          return null;
-      //System.out.println("\n"+root.data + " is current root;");
+
       root.lftChild = collectGarbage(root.lftChild);
       root.rtChild = collectGarbage(root.rtChild);
 
       //deal with the node
       if (root.deleted)
       {
-         //System.out.print(root.data + "del ");
-         root = removeHard(root, root.data);
-         //if (root != null)
-            //System.out.println(root.data + "root data");
+         root = removeHard(root);
       }
 
       return root;
