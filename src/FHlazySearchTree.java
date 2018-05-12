@@ -13,6 +13,11 @@ public class FHlazySearchTree<E extends Comparable<? super E>>
    {
       clear();
    }
+   public FHlazySearchTree(FHlazySearchTree obj){
+      mSize = obj.mSize;
+      mSizeHard = obj.mSizeHard;
+      mRoot = obj.mRoot;
+   }
 
    public boolean empty()
    {
