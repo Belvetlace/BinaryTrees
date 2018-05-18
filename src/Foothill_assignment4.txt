@@ -1,0 +1,831 @@
+// CIS 1C Assignment #4
+// Instructor Solution Client
+
+import cs_1c.*;
+
+import java.util.NoSuchElementException;
+
+class PrintObject<E> implements Traverser<E>
+{
+   public void visit(E x)
+   {
+      System.out.print( x.toString() + " ");
+   }
+};
+
+//------------------------------------------------------
+public class Foothill
+{
+   // -------  main --------------
+   public static void main(String[] args) throws Exception
+   {
+      int k;
+      FHlazySearchTree<Integer> searchTree = new FHlazySearchTree<Integer>();
+
+      System.out.println("\nInitial size: " );
+      printTreeSizes(searchTree);
+      searchTree = populateTree(searchTree);
+
+      System.out.println("After populating -- traversal and sizes: ");
+      printTreeSizes(searchTree);
+
+      System.out.println("Collecting garbage on new tree - should be " +
+              "no garbage.");
+      searchTree.collectGarbage();
+      printTreeSizes(searchTree);
+
+      // test assignment operator
+      FHlazySearchTree<Integer> searchTree2
+              = (FHlazySearchTree<Integer>) searchTree.clone();
+      System.out.println("\nCloning tree: tree 2:");
+      printTreeSizes(searchTree2);
+
+      System.out.println("\n\nAttempting 1 removal on 1st tree: ");
+      if (searchTree.remove(20))
+         System.out.println("removed " + 20);
+      printTreeSizes(searchTree);
+
+      FHlazySearchTree<Integer> searchTree3
+              = (FHlazySearchTree<Integer>) searchTree.clone();
+      System.out.println("\nCloning tree with soft-deleted node: tree 3:");
+      printTreeSizes(searchTree3);
+
+      System.out.println("\nCollecting Garbage on 1st tree:" +
+              " - should clean 1 item. ");
+      searchTree.collectGarbage();
+      printTreeSizes(searchTree);
+
+      System.out.println("Collecting Garbage again - no change expected. ");
+      searchTree.collectGarbage();
+      printTreeSizes(searchTree);
+
+      // test soft insertion and deletion:
+
+      System.out.println("Adding 'hard' 22 - should see new sizes. ");
+      searchTree.insert(22);
+      printTreeSizes(searchTree);
+
+      System.out.println("\nAfter soft removal 22. ");
+      searchTree.remove(22);
+      printTreeSizes(searchTree);
+
+      System.out.println("Repeating soft removal 22. Should see no change. ");
+      searchTree.remove(22);
+      printTreeSizes(searchTree);
+
+      System.out.println("Soft insertion 22. Hard size should not change. ");
+      searchTree.insert(22);
+      printTreeSizes(searchTree);
+
+      System.out.println("\nSoft removal 22. ");
+      searchTree.remove(22);
+
+      System.out.println("\n----------------------");
+      System.out.println("\nTest Find() on filled tree");
+      testFind(searchTree);
+      System.out.println("\n----------------------");
+
+      System.out.println("\nTest findMax() on filled tree");
+      testFindMax(searchTree);
+      System.out.println("\nSoft delete 70");
+      searchTree.remove(70);
+      testFindMax(searchTree);
+      System.out.println("\n----------------------");
+
+      System.out.println("\nTest findMin() on filled tree");
+      testFindMin(searchTree);
+      System.out.println("\nSoft delete 10");
+      searchTree.remove(10);
+      testFindMin(searchTree);
+      System.out.println("\n----------------------");
+
+
+      System.out.println("\nInserting extra 100 nodes " +
+              "and attempting 100 removals: ");
+      insertExtraTenNodes(searchTree);
+      printTreeSizes(searchTree);
+      System.out.print("removed:");
+      for (k = 170; k > 0; k--)
+      {
+         if (searchTree.remove(k))
+            System.out.print(" " + k);
+      }
+
+      System.out.println("\nsearch_tree now:");
+      printTreeSizes(searchTree);
+
+      searchTree.collectGarbage();
+
+      System.out.println("\nsearch_tree now after garbage collector:");
+      printTreeSizes(searchTree);
+
+      System.out.println("\n----------------------");
+      System.out.println("\nTest Find() on empty tree (should not be there)");
+      testFind(searchTree);
+      System.out.println("\n----------------------");
+
+      System.out.println("\nTest findMax() on empty tree");
+      testFindMax(searchTree);
+      System.out.println("\n----------------------");
+
+      System.out.println("\nTest findMin() on empty tree");
+      testFindMin(searchTree);
+      System.out.println("\n----------------------");
+
+      insertExtraNodes(searchTree2);
+
+      System.out.println("\nsearchTree2:");
+      printTreeSizes(searchTree2);
+
+      System.out.println("\n----------------------");
+      System.out.println("\nTest findMin() on filled tree2");
+      testFindMin(searchTree2);
+      System.out.println("\n----------------------");
+
+
+      System.out.println("\n###############################");
+      System.out.println("\nTest with Book Entries");
+      FHlazySearchTree<EBookEntry> searchTreeBooks =
+              new FHlazySearchTree<>();
+
+      // how we read the data from files
+      EBookEntryReader bookInput =
+              new EBookEntryReader("catalog-short4.txt");
+      int arraySize;
+
+      // how we test the success of the read:
+      if (bookInput.readError())
+      {
+         System.out.println("couldn't open " + bookInput.getFileName()
+                 + " for input.");
+         return;
+      }
+
+      System.out.println(bookInput.getFileName());
+      System.out.println(bookInput.getNumBooks());
+
+      // create an array of objects for our own use:
+      arraySize = bookInput.getNumBooks();
+      EBookEntry[] bookArray = new EBookEntry[arraySize];
+      for (int b = 0; b < arraySize; b++)
+         bookArray[b] = bookInput.getBook(b);
+
+      EBookEntry.setSortType(EBookEntry.SORT_BY_ID);
+      System.out.println( "Sorting ..." );
+      FoothillSort.arraySort(bookArray);
+
+      System.out.println( "\nAdding 10 books" );
+      for (int e = 0; e < arraySize-4853; e++)
+         searchTreeBooks.insert(bookArray[e]);
+      //System.out.println("array length " + bookArray.length);
+      printTreeBookSizes(searchTreeBooks);
+
+      System.out.println("\n###############################");
+      System.out.println( "\nCloned book:" );
+      FHlazySearchTree<EBookEntry> searchTreeBooks2 =
+              (FHlazySearchTree<EBookEntry>)searchTreeBooks.clone();
+      printTreeBookSizes(searchTreeBooks2);
+      System.out.println("\n###############################");
+
+      System.out.println( "\nRemoving 3 books" );
+      searchTreeBooks.remove(bookArray[1]);
+      searchTreeBooks.remove(bookArray[2]);
+      searchTreeBooks.remove(bookArray[3]);
+
+      printTreeBookSizes(searchTreeBooks);
+
+      System.out.println( "\nCollecting garbage" );
+
+      searchTreeBooks.collectGarbage();
+
+      printTreeBookSizes(searchTreeBooks);
+
+      System.out.println("\n###############################");
+      System.out.println( "\nRemoving last book. Testing find" );
+      searchTreeBooks.remove(bookArray[9]);
+      testFindBook(searchTreeBooks, bookArray);
+
+      System.out.println("\nTesting findMax\n" + searchTreeBooks.findMax());
+      System.out.println("\nTesting findMin\n" + searchTreeBooks.findMin());
+
+      System.out.println("\n###############################");
+      System.out.println( "\nCloned book unchanged:" );
+      printTreeBookSizes(searchTreeBooks2);
+
+   }
+
+   public static void printTreeBookSizes(FHlazySearchTree<EBookEntry> bookTree)
+   {
+      PrintObject<EBookEntry> printBooks = new PrintObject<>();
+      System.out.print("EBookEntry: ");
+      bookTree.traverse(printBooks);
+      System.out.print("\nSoft deleted EBookEntry: ");
+      bookTree.traverseSoftDeleted(printBooks);
+      System.out.println("\nTree size: " + bookTree.size()
+              + "  Hard size: " + bookTree.sizeHard());
+   }
+
+   public static void
+   testFindBook(FHlazySearchTree<EBookEntry> searchTree, EBookEntry[] bookArray)
+   {
+      System.out.println("\nSearch for existed book");
+      try
+      {
+         System.out.println("found: " + searchTree.find(bookArray[4]));
+      } catch (NoSuchElementException e)
+      {
+         System.out.println("book not found");
+      }
+
+      System.out.println("Search for soft deleted last book");
+      try
+      {
+         System.out.println("found: " + searchTree.find(bookArray[9]));
+      } catch (NoSuchElementException e)
+      {
+         System.out.println("book not found");
+      }
+      System.out.println("\nSearch for deleted first book");
+      try
+      {
+         System.out.println("found: " + searchTree.find(bookArray[1]));
+      } catch (NoSuchElementException e)
+      {
+         System.out.println("book not found");
+      }
+   }
+
+   private static void testFindMin(FHlazySearchTree<Integer> searchTree)
+   {
+      printTreeSizes(searchTree);
+      try
+      {
+         System.out.println("search tree for min: found "
+                 + searchTree.findMin());
+      } catch (NoSuchElementException e)
+      {
+         System.out.println("min not found");
+      }
+   }
+
+   private static void testFindMax(FHlazySearchTree<Integer> searchTree)
+   {
+      printTreeSizes(searchTree);
+      try
+      {
+         System.out.println("search tree for max: found "
+                 + searchTree.findMax());
+      } catch (NoSuchElementException e)
+      {
+         System.out.println("max not found");
+      }
+   }
+
+   // helper methods
+   public static FHlazySearchTree<Integer>
+   populateTree(FHlazySearchTree<Integer> searchTree)
+   {
+      searchTree.insert(50);
+      searchTree.insert(20);
+      searchTree.insert(30);
+      searchTree.insert(70);
+      searchTree.insert(10);
+      searchTree.insert(60);
+      return searchTree;
+   }
+
+   public static void printTreeSizes(FHlazySearchTree<Integer> searchTree)
+   {
+      PrintObject<Integer> intPrinter = new PrintObject<Integer>();
+      System.out.print("Nodes: ");
+      searchTree.traverse(intPrinter);
+      System.out.print("\nSoft deleted nodes: ");
+      searchTree.traverseSoftDeleted(intPrinter);
+      System.out.println("\nTree size: " + searchTree.size()
+              + "  Hard size: " + searchTree.sizeHard());
+   }
+
+   public static void insertExtraNodes(FHlazySearchTree<Integer> searchTree)
+   {
+      searchTree.insert(500);
+      searchTree.insert(200);
+      searchTree.insert(300);
+      searchTree.insert(700);
+      searchTree.insert(100);
+      searchTree.insert(600);
+   }
+
+   public static void
+   insertExtraTenNodes(FHlazySearchTree<Integer> searchTree)
+   {
+      for(int i = 0 ; i < 10; i++)
+      searchTree.insert(i);
+   }
+
+   public static void testFind(FHlazySearchTree<Integer> searchTree)
+   {
+      System.out.println("\nSearch for existed node 30");
+      try
+      {
+         System.out.println("search tree1 for 30: found "
+                 + searchTree.find(30));
+      } catch (NoSuchElementException e)
+      {
+         System.out.println("node 30 not found");
+      }
+
+      System.out.println("\nSearch for soft deleted node 22");
+      try
+      {
+         System.out.println("search tree1 for 22: found "
+                 + searchTree.find(22));
+      } catch (NoSuchElementException e)
+      {
+         System.out.println("node 22 not found");
+      }
+      System.out.println("\nSearch for deleted node 20");
+      try
+      {
+         System.out.println("search tree1 for 20: found "
+                 + searchTree.find(20));
+      } catch (NoSuchElementException e)
+      {
+         System.out.println("node 20 not found");
+      }
+   }
+}
+
+
+/* ---------------------- Run --------------------------
+
+Initial size:
+Nodes:
+Soft deleted nodes:
+Tree size: 0  Hard size: 0
+After populating -- traversal and sizes:
+Nodes: 10 20 30 50 60 70
+Soft deleted nodes:
+Tree size: 6  Hard size: 6
+Collecting garbage on new tree - should be no garbage.
+Nodes: 10 20 30 50 60 70
+Soft deleted nodes:
+Tree size: 6  Hard size: 6
+
+Cloning tree: tree 2:
+Nodes: 10 20 30 50 60 70
+Soft deleted nodes:
+Tree size: 6  Hard size: 6
+
+
+Attempting 1 removal on 1st tree:
+removed 20
+Nodes: 10 30 50 60 70
+Soft deleted nodes: 20
+Tree size: 5  Hard size: 6
+
+Cloning tree with soft-deleted node: tree 3:
+Nodes: 10 30 50 60 70
+Soft deleted nodes: 20
+Tree size: 5  Hard size: 5
+
+Collecting Garbage on 1st tree: - should clean 1 item.
+Nodes: 10 30 50 60 70
+Soft deleted nodes:
+Tree size: 5  Hard size: 5
+Collecting Garbage again - no change expected.
+Nodes: 10 30 50 60 70
+Soft deleted nodes:
+Tree size: 5  Hard size: 5
+Adding 'hard' 22 - should see new sizes.
+Nodes: 10 22 30 50 60 70
+Soft deleted nodes:
+Tree size: 6  Hard size: 6
+
+After soft removal 22.
+Nodes: 10 30 50 60 70
+Soft deleted nodes: 22
+Tree size: 5  Hard size: 6
+Repeating soft removal 22. Should see no change.
+Nodes: 10 30 50 60 70
+Soft deleted nodes: 22
+Tree size: 5  Hard size: 6
+Soft insertion 22. Hard size should not change.
+Nodes: 10 22 30 50 60 70
+Soft deleted nodes:
+Tree size: 6  Hard size: 6
+
+Soft removal 22.
+
+----------------------
+
+Test Find() on filled tree
+
+Search for existed node 30
+search tree1 for 30: found 30
+
+Search for soft deleted node 22
+node 22 not found
+
+Search for deleted node 20
+node 20 not found
+
+----------------------
+
+Test findMax() on filled tree
+Nodes: 10 30 50 60 70
+Soft deleted nodes: 22
+Tree size: 5  Hard size: 6
+search tree for max: found 70
+
+Soft delete 70
+Nodes: 10 30 50 60
+Soft deleted nodes: 22 70
+Tree size: 4  Hard size: 6
+search tree for max: found 60
+
+----------------------
+
+Test findMin() on filled tree
+Nodes: 10 30 50 60
+Soft deleted nodes: 22 70
+Tree size: 4  Hard size: 6
+search tree for min: found 10
+
+Soft delete 10
+Nodes: 30 50 60
+Soft deleted nodes: 10 22 70
+Tree size: 3  Hard size: 6
+search tree for min: found 30
+
+----------------------
+
+Inserting extra 100 nodes and attempting 100 removals:
+Nodes: 0 1 2 3 4 5 6 7 8 9 30 50 60
+Soft deleted nodes: 10 22 70
+Tree size: 13  Hard size: 16
+removed: 60 50 30 9 8 7 6 5 4 3 2 1
+search_tree now:
+Nodes: 0
+Soft deleted nodes: 1 2 3 4 5 6 7 8 9 10 22 30 50 60 70
+Tree size: 1  Hard size: 16
+
+search_tree now after garbage collector:
+Nodes: 0
+Soft deleted nodes:
+Tree size: 1  Hard size: 1
+
+----------------------
+
+Test Find() on empty tree (should not be there)
+
+Search for existed node 30
+node 30 not found
+
+Search for soft deleted node 22
+node 22 not found
+
+Search for deleted node 20
+node 20 not found
+
+----------------------
+
+Test findMax() on empty tree
+Nodes: 0
+Soft deleted nodes:
+Tree size: 1  Hard size: 1
+search tree for max: found 0
+
+----------------------
+
+Test findMin() on empty tree
+Nodes: 0
+Soft deleted nodes:
+Tree size: 1  Hard size: 1
+search tree for min: found 0
+
+----------------------
+
+searchTree2:
+Nodes: 10 20 30 50 60 70 100 200 300 500 600 700
+Soft deleted nodes:
+Tree size: 12  Hard size: 12
+
+----------------------
+
+Test findMin() on filled tree2
+Nodes: 10 20 30 50 60 70 100 200 300 500 600 700
+Soft deleted nodes:
+Tree size: 12  Hard size: 12
+search tree for min: found 10
+
+----------------------
+
+###############################
+
+Test with Book Entries
+catalog-short4.txt
+4863
+Sorting ...
+
+Adding 10 books
+EBookEntry:    # 9  ---------------
+   "Abraham Lincoln's First Inaugural Address"
+   by Lincoln, Abraham, 1809-1865
+   re: United States -- Politics and government -- 1861-1865
+
+    # 10  ---------------
+   "The Bible, Old and New Testaments, King James Version"
+   by (no data found)
+   re: Religion
+
+    # 11  ---------------
+   "Alice's Adventures in Wonderland"
+   by Carroll, Lewis, 1832-1898
+   re: Fantasy
+
+    # 12  ---------------
+   "Through the Looking-Glass"
+   by Carroll, Lewis, 1832-1898
+   re: Fantasy
+
+    # 19  ---------------
+   "The Song of Hiawatha"
+   by Longfellow, Henry Wadsworth, 1807-1882
+   re: Indians of North America -- Folklore
+
+    # 27  ---------------
+   "Far from the Madding Crowd"
+   by Hardy, Thomas, 1840-1928
+   re: Didactic fiction
+
+    # 67  ---------------
+   "The Black Experience in America"
+   by Coombs, Norman, 1932-
+   re: African Americans -- History
+
+    # 68  ---------------
+   "Warlord of Mars"
+   by Burroughs, Edgar Rice, 1875-1950
+   re: Science fiction
+
+    # 69  ---------------
+   "The 32nd Mersenne PrimePredicted by Mersenne"
+   by Slowinski, David
+   re: Numbers, Prime
+
+    # 73  ---------------
+   "The Red Badge of Courage"
+   by Crane, Stephen, 1871-1900
+   re: Historical fiction
+
+
+Soft deleted EBookEntry:
+Tree size: 10  Hard size: 10
+
+###############################
+
+Cloned book:
+EBookEntry:    # 9  ---------------
+   "Abraham Lincoln's First Inaugural Address"
+   by Lincoln, Abraham, 1809-1865
+   re: United States -- Politics and government -- 1861-1865
+
+    # 10  ---------------
+   "The Bible, Old and New Testaments, King James Version"
+   by (no data found)
+   re: Religion
+
+    # 11  ---------------
+   "Alice's Adventures in Wonderland"
+   by Carroll, Lewis, 1832-1898
+   re: Fantasy
+
+    # 12  ---------------
+   "Through the Looking-Glass"
+   by Carroll, Lewis, 1832-1898
+   re: Fantasy
+
+    # 19  ---------------
+   "The Song of Hiawatha"
+   by Longfellow, Henry Wadsworth, 1807-1882
+   re: Indians of North America -- Folklore
+
+    # 27  ---------------
+   "Far from the Madding Crowd"
+   by Hardy, Thomas, 1840-1928
+   re: Didactic fiction
+
+    # 67  ---------------
+   "The Black Experience in America"
+   by Coombs, Norman, 1932-
+   re: African Americans -- History
+
+    # 68  ---------------
+   "Warlord of Mars"
+   by Burroughs, Edgar Rice, 1875-1950
+   re: Science fiction
+
+    # 69  ---------------
+   "The 32nd Mersenne PrimePredicted by Mersenne"
+   by Slowinski, David
+   re: Numbers, Prime
+
+    # 73  ---------------
+   "The Red Badge of Courage"
+   by Crane, Stephen, 1871-1900
+   re: Historical fiction
+
+
+Soft deleted EBookEntry:
+Tree size: 10  Hard size: 10
+
+###############################
+
+Removing 3 books
+EBookEntry:    # 9  ---------------
+   "Abraham Lincoln's First Inaugural Address"
+   by Lincoln, Abraham, 1809-1865
+   re: United States -- Politics and government -- 1861-1865
+
+    # 19  ---------------
+   "The Song of Hiawatha"
+   by Longfellow, Henry Wadsworth, 1807-1882
+   re: Indians of North America -- Folklore
+
+    # 27  ---------------
+   "Far from the Madding Crowd"
+   by Hardy, Thomas, 1840-1928
+   re: Didactic fiction
+
+    # 67  ---------------
+   "The Black Experience in America"
+   by Coombs, Norman, 1932-
+   re: African Americans -- History
+
+    # 68  ---------------
+   "Warlord of Mars"
+   by Burroughs, Edgar Rice, 1875-1950
+   re: Science fiction
+
+    # 69  ---------------
+   "The 32nd Mersenne PrimePredicted by Mersenne"
+   by Slowinski, David
+   re: Numbers, Prime
+
+    # 73  ---------------
+   "The Red Badge of Courage"
+   by Crane, Stephen, 1871-1900
+   re: Historical fiction
+
+
+Soft deleted EBookEntry:    # 10  ---------------
+   "The Bible, Old and New Testaments, King James Version"
+   by (no data found)
+   re: Religion
+
+    # 11  ---------------
+   "Alice's Adventures in Wonderland"
+   by Carroll, Lewis, 1832-1898
+   re: Fantasy
+
+    # 12  ---------------
+   "Through the Looking-Glass"
+   by Carroll, Lewis, 1832-1898
+   re: Fantasy
+
+
+Tree size: 7  Hard size: 10
+
+Collecting garbage
+EBookEntry:    # 9  ---------------
+   "Abraham Lincoln's First Inaugural Address"
+   by Lincoln, Abraham, 1809-1865
+   re: United States -- Politics and government -- 1861-1865
+
+    # 19  ---------------
+   "The Song of Hiawatha"
+   by Longfellow, Henry Wadsworth, 1807-1882
+   re: Indians of North America -- Folklore
+
+    # 27  ---------------
+   "Far from the Madding Crowd"
+   by Hardy, Thomas, 1840-1928
+   re: Didactic fiction
+
+    # 67  ---------------
+   "The Black Experience in America"
+   by Coombs, Norman, 1932-
+   re: African Americans -- History
+
+    # 68  ---------------
+   "Warlord of Mars"
+   by Burroughs, Edgar Rice, 1875-1950
+   re: Science fiction
+
+    # 69  ---------------
+   "The 32nd Mersenne PrimePredicted by Mersenne"
+   by Slowinski, David
+   re: Numbers, Prime
+
+    # 73  ---------------
+   "The Red Badge of Courage"
+   by Crane, Stephen, 1871-1900
+   re: Historical fiction
+
+
+Soft deleted EBookEntry:
+Tree size: 7  Hard size: 7
+
+###############################
+
+Removing last book. Testing find
+
+Search for existed book
+found:    # 19  ---------------
+   "The Song of Hiawatha"
+   by Longfellow, Henry Wadsworth, 1807-1882
+   re: Indians of North America -- Folklore
+
+
+Search for soft deleted last book
+book not found
+
+Search for deleted first book
+book not found
+
+Testing findMax
+   # 69  ---------------
+   "The 32nd Mersenne PrimePredicted by Mersenne"
+   by Slowinski, David
+   re: Numbers, Prime
+
+
+
+Testing findMin
+   # 9  ---------------
+   "Abraham Lincoln's First Inaugural Address"
+   by Lincoln, Abraham, 1809-1865
+   re: United States -- Politics and government -- 1861-1865
+
+
+
+###############################
+
+Cloned book unchanged:
+EBookEntry:    # 9  ---------------
+   "Abraham Lincoln's First Inaugural Address"
+   by Lincoln, Abraham, 1809-1865
+   re: United States -- Politics and government -- 1861-1865
+
+    # 10  ---------------
+   "The Bible, Old and New Testaments, King James Version"
+   by (no data found)
+   re: Religion
+
+    # 11  ---------------
+   "Alice's Adventures in Wonderland"
+   by Carroll, Lewis, 1832-1898
+   re: Fantasy
+
+    # 12  ---------------
+   "Through the Looking-Glass"
+   by Carroll, Lewis, 1832-1898
+   re: Fantasy
+
+    # 19  ---------------
+   "The Song of Hiawatha"
+   by Longfellow, Henry Wadsworth, 1807-1882
+   re: Indians of North America -- Folklore
+
+    # 27  ---------------
+   "Far from the Madding Crowd"
+   by Hardy, Thomas, 1840-1928
+   re: Didactic fiction
+
+    # 67  ---------------
+   "The Black Experience in America"
+   by Coombs, Norman, 1932-
+   re: African Americans -- History
+
+    # 68  ---------------
+   "Warlord of Mars"
+   by Burroughs, Edgar Rice, 1875-1950
+   re: Science fiction
+
+    # 69  ---------------
+   "The 32nd Mersenne PrimePredicted by Mersenne"
+   by Slowinski, David
+   re: Numbers, Prime
+
+    # 73  ---------------
+   "The Red Badge of Courage"
+   by Crane, Stephen, 1871-1900
+   re: Historical fiction
+
+
+Soft deleted EBookEntry:
+Tree size: 10  Hard size: 10
+
+Process finished with exit code 0
+
+---------------------------------------------------------------------- */
