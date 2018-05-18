@@ -319,7 +319,7 @@ public class Foothill
    insertExtraTenNodes(FHlazySearchTree<Integer> searchTree)
    {
       for(int i = 0 ; i < 10; i++)
-      searchTree.insert(i);
+         searchTree.insert(i);
    }
 
    public static void testFind(FHlazySearchTree<Integer> searchTree)
